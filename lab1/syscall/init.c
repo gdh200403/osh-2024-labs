@@ -25,5 +25,7 @@ int main() {
         printf("System call returned -1, buffer is too small\n");
     }
 
-    return 0;
+    while(1){
+
+    }
 }
