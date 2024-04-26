@@ -7,10 +7,10 @@ EXECUTABLE=shell
 all: $(SOURCES) $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS)
-    $(CC) $(OBJECTS) -o $@
+	$(CC) $(OBJECTS) -o $@
 
 .cpp.o:
-    $(CC) $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 
 clean:
-    rm -f *o $(EXECUTABLE)
+	rm -f *o $(EXECUTABLE)

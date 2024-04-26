@@ -12,8 +12,38 @@
 #include <unistd.h>
 // wait
 #include <sys/wait.h>
+#include <pwd.h>
+#include <string.h>
 
 std::vector<std::string> split(std::string s, const std::string &delimiter);
+
+void prompt() {
+    // 获取用户名和主目录
+    struct passwd *pw = getpwuid(getuid());
+    const char *username = pw->pw_name;
+    const char *homedir = pw->pw_dir;
+
+    // 获取主机名
+    char hostname[HOST_NAME_MAX];
+    gethostname(hostname, HOST_NAME_MAX);
+
+    // 获取当前工作目录
+    char cwd[PATH_MAX];
+    getcwd(cwd, PATH_MAX);
+
+    // 检查当前工作目录是否在用户的主目录下
+    if (strncmp(cwd, homedir, strlen(homedir)) == 0) {
+        // 用 "~" 替换主目录的部分
+        memmove(cwd, cwd + strlen(homedir), strlen(cwd) - strlen(homedir) + 1);
+        cwd[0] = '~';
+    }
+
+    // 检查当前用户是否是root用户
+    const char *prompt_symbol = (geteuid() == 0) ? "#" : "$";
+
+    // 打印提示符
+    std::cout << "[MyShell]" << username << "@" << hostname << ":" << cwd << prompt_symbol << " ";
+}
 
 int main() {
   // 不同步 iostream 和 cstdio 的 buffer
@@ -22,8 +52,9 @@ int main() {
   // 用来存储读入的一行命令
   std::string cmd;
   while (true) {
+
     // 打印提示符
-    std::cout << "$ ";
+    prompt();
 
     // 读入一行。std::getline 结果不包含换行符。
     std::getline(std::cin, cmd);
