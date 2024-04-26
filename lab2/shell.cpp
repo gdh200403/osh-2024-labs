@@ -17,34 +17,6 @@
 
 std::vector<std::string> split(std::string s, const std::string &delimiter);
 
-void prompt() {
-    // 获取用户名和主目录
-    struct passwd *pw = getpwuid(getuid());
-    const char *username = pw->pw_name;
-    const char *homedir = pw->pw_dir;
-
-    // 获取主机名
-    char hostname[HOST_NAME_MAX];
-    gethostname(hostname, HOST_NAME_MAX);
-
-    // 获取当前工作目录
-    char cwd[PATH_MAX];
-    getcwd(cwd, PATH_MAX);
-
-    // 检查当前工作目录是否在用户的主目录下
-    if (strncmp(cwd, homedir, strlen(homedir)) == 0) {
-        // 用 "~" 替换主目录的部分
-        memmove(cwd, cwd + strlen(homedir), strlen(cwd) - strlen(homedir) + 1);
-        cwd[0] = '~';
-    }
-
-    // 检查当前用户是否是root用户
-    const char *prompt_symbol = (geteuid() == 0) ? "#" : "$";
-
-    // 打印提示符
-    std::cout << "[MyShell]" << username << "@" << hostname << ":" << cwd << prompt_symbol << " ";
-}
-
 int main() {
   // 不同步 iostream 和 cstdio 的 buffer
   std::ios::sync_with_stdio(false);
@@ -54,7 +26,7 @@ int main() {
   while (true) {
 
     // 打印提示符
-    prompt();
+    std::cout << "$ ";
 
     // 读入一行。std::getline 结果不包含换行符。
     std::getline(std::cin, cmd);
@@ -88,13 +60,31 @@ int main() {
     }
 
     if (args[0] == "pwd") {
-      std::cout << "To be done!\n";
-      continue;
+        char cwd[PATH_MAX];
+        if (getcwd(cwd, PATH_MAX) != NULL) {
+            std::cout << cwd << "\n";
+        } else {
+            std::cout << "Error getting current directory\n";
+        }
+        continue;
     }
 
     if (args[0] == "cd") {
-      std::cout << "To be done!\n";
-      continue;
+        if (args.size() < 2) {
+            char* home = getenv("HOME");
+            if (home) {
+                if (chdir(home) != 0) {
+                    std::cout << "cd: " << strerror(errno) << "\n";
+                }
+            } else {
+                std::cout << "cd: HOME environment variable not set\n";
+            }
+        } else {
+            if (chdir(args[1].c_str()) != 0) {
+                std::cout << "cd: " << strerror(errno) << "\n";
+            }
+        }
+        continue;
     }
 
     // 处理外部命令
