@@ -42,7 +42,7 @@ void prompt() {
     const char *prompt = (geteuid() == 0) ? "#" : "$";
 
     // 打印提示符
-    std::cout << username << "@" << hostname << ":" << path << prompt << " ";
+    std::cout << "[MyShell]" << username << "@" << hostname << ":" << path << prompt << " ";
 }
 
 int main() {
@@ -152,7 +152,8 @@ std::vector<std::string> split(std::string s, const std::string &delimiter) {
   std::string token;
   while ((pos = s.find(delimiter)) != std::string::npos) {
     token = s.substr(0, pos);
-    res.push_back(token);
+    if(!token.empty())
+      res.push_back(token);
     s = s.substr(pos + delimiter.length());
   }
   res.push_back(s);
