@@ -175,36 +175,42 @@ int main()
       continue;
     }
 
+    // 检查是否有管道
+    cmds = split(cmdLine, "|");
 
-    // 处理外部命令
-    pid_t pid = fork();
+    // 如果没有管道
 
-    // std::vector<std::string> 转 char **
-    char *arg_ptrs[args.size() + 1];
-    for (auto i = 0; i < args.size(); i++)
-    {
-      arg_ptrs[i] = &args[i][0];
-    }
-    // exec p 系列的 argv 需要以 nullptr 结尾
-    arg_ptrs[args.size()] = nullptr;
 
-    if (pid == 0)
-    {
-      // 这里只有子进程才会进入
-      // execvp 会完全更换子进程接下来的代码，所以正常情况下 execvp 之后这里的代码就没意义了
-      // 如果 execvp 之后的代码被运行了，那就是 execvp 出问题了
-      execvp(args[0].c_str(), arg_ptrs);
 
-      // 所以这里直接报错
-      exit(255);
-    }
+  //   // 处理外部命令
+  //   pid_t pid = fork();
 
-    // 这里只有父进程（原进程）才会进入
-    int ret = wait(nullptr);
-    if (ret < 0)
-    {
-      std::cout << "wait failed";
-    }
+  //   // std::vector<std::string> 转 char **
+  //   char *arg_ptrs[args.size() + 1];
+  //   for (auto i = 0; i < args.size(); i++)
+  //   {
+  //     arg_ptrs[i] = &args[i][0];
+  //   }
+  //   // exec p 系列的 argv 需要以 nullptr 结尾
+  //   arg_ptrs[args.size()] = nullptr;
+
+  //   if (pid == 0)
+  //   {
+  //     // 这里只有子进程才会进入
+  //     // execvp 会完全更换子进程接下来的代码，所以正常情况下 execvp 之后这里的代码就没意义了
+  //     // 如果 execvp 之后的代码被运行了，那就是 execvp 出问题了
+  //     execvp(args[0].c_str(), arg_ptrs);
+
+  //     // 所以这里直接报错
+  //     exit(255);
+  //   }
+
+  //   // 这里只有父进程（原进程）才会进入
+  //   int ret = wait(nullptr);
+  //   if (ret < 0)
+  //   {
+  //     std::cout << "wait failed";
+  //   }
   }
 }
 
