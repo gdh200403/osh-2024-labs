@@ -17,6 +17,34 @@
 
 std::vector<std::string> split(std::string s, const std::string &delimiter);
 
+void prompt() {
+    // 获取用户名和家目录
+    struct passwd *pw = getpwuid(getuid());
+    const char *username = pw->pw_name;
+    const char *homedir = pw->pw_dir;
+
+    // 获取主机名
+    char hostname[HOST_NAME_MAX];
+    gethostname(hostname, HOST_NAME_MAX);
+
+    // 获取当前工作目录
+    char cwd[PATH_MAX];
+    getcwd(cwd, PATH_MAX);
+
+    // 检查当前工作目录是否包含家目录，如果是，用~替换家目录
+    std::string path(cwd);
+    std::string home(homedir);
+    if (path.find(home) == 0) {
+        path.replace(0, home.length(), "~");
+    }
+
+    // 使用geteuid()检查用户权限，如果是0，使用"#"作为提示符，否则使用"$"
+    const char *prompt = (geteuid() == 0) ? "#" : "$";
+
+    // 打印提示符
+    std::cout << username << "@" << hostname << ":" << path << prompt << " ";
+}
+
 int main() {
   // 不同步 iostream 和 cstdio 的 buffer
   std::ios::sync_with_stdio(false);
@@ -26,7 +54,7 @@ int main() {
   while (true) {
 
     // 打印提示符
-    std::cout << "$ ";
+    prompt();
 
     // 读入一行。std::getline 结果不包含换行符。
     std::getline(std::cin, cmd);
