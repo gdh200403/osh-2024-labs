@@ -161,14 +161,6 @@ void SimpleCmdHandler(const std::string& cmdLine) {
     exit(1);
 }
 
-bool IsPipe(std::string cmdLine){
-  return cmdLine.find("|") != std::string::npos;
-}
-
-void PipeCmdHandler(std::string cmdLine){
-  return;
-}
-
 bool IsRedirect(std::string cmdLine){
   return cmdLine.find(">") != std::string::npos || cmdLine.find("<") != std::string::npos;
 }
@@ -268,6 +260,7 @@ void RedirectCmdHandler(std::string cmdLine){
   if (pid == 0) {
     // Child process
     SimpleCmdHandler(command);
+    exit(0);
   } else if (pid > 0) {
     // Parent process
     waitpid(pid, nullptr, 0);
@@ -281,6 +274,53 @@ void RedirectCmdHandler(std::string cmdLine){
   }
 }
 
+bool IsPipe(std::string cmdLine){
+  return cmdLine.find("|") != std::string::npos;
+}
+
+void PipeCmdHandler(std::string cmdLine){
+  std::vector<std::string> cmds = split(cmdLine, "|");
+  if (cmds.size() < 2) {
+    std::cerr << "error: cmdLine does not contain enough parts" << std::endl;
+    return;
+  }
+
+  int pipefd[2];
+  int oldfd = 0;
+
+  for (size_t i = 0; i < cmds.size(); ++i) {
+    if (pipe(pipefd) == -1) {
+      std::cerr << "error: pipe failed" << std::endl;
+      return;
+    }
+
+    pid_t pid = fork();
+    if (pid == 0) {
+      // Child process
+      dup2(oldfd, 0);
+      if (i < cmds.size() - 1) {
+        dup2(pipefd[1], 1);
+      }
+      close(pipefd[0]);
+      if(IsRedirect(cmds[i])){
+        RedirectCmdHandler(cmds[i]);
+        exit(0);
+      }else{
+        SimpleCmdHandler(cmds[i]);
+      }
+    } else if (pid > 0) {
+      // Parent process
+      waitpid(-1, nullptr, 0);
+      close(pipefd[1]);
+      oldfd = pipefd[0];
+    } else {
+      // Fork failed
+      std::cerr << "error: fork failed" << std::endl;
+      return;
+    }
+  }
+}
+
 int main()
 {
   // 不同步 iostream 和 cstdio 的 buffer
@@ -289,14 +329,14 @@ int main()
   // 用来存储读入的一行命令
   std::string cmdLine;
 
-  // 用来存储被管道分隔符分割的cmdLine
-  std::vector<std::string> cmds;
+  // // 用来存储被管道分隔符分割的cmdLine
+  // std::vector<std::string> cmds;
 
-  // 用来存储被重定向分隔符分割的cmd
-  std::vector<std::string> cmdParts; 
+  // // 用来存储被重定向分隔符分割的cmd
+  // std::vector<std::string> cmdParts; 
 
-  // 用来存储被空格分隔符分割cmdParts的命令行参数
-  std::vector<std::string> args;
+  // // 用来存储被空格分隔符分割cmdParts的命令行参数
+  // std::vector<std::string> args;
 
 //Main Loop
   while (true)
@@ -329,33 +369,11 @@ int main()
       RemoveBackgroundSymbol(cmdLine);
     }
 
-    //处理外部命令
-    pid_t pid = fork();
+    // //处理外部命令
+    // pid_t pid = fork();
 
-    if(pid == 0){
-      //子进程0，用于执行外部命令
-      if(IsPipe(cmdLine)){
-        PipeCmdHandler(cmdLine);
-      }
-      else if(IsRedirect(cmdLine)){
-        RedirectCmdHandler(cmdLine);
-      }
-      else{
-        //不包含管道和重定向符号的简单外部命令
-        SimpleCmdHandler(cmdLine);
-      }
-    }
-    else{
-      //父进程
-      if(!isBackground){
-        int ret = waitpid(pid, nullptr, 0);
-        if(ret < 0){
-          std::cout << "wait failed\n";
-        }
-      }
-    }
-
-    // //debug
+    // if(pid == 0){
+    //   //子进程0，用于执行外部命令
     //   if(IsPipe(cmdLine)){
     //     PipeCmdHandler(cmdLine);
     //   }
@@ -366,6 +384,28 @@ int main()
     //     //不包含管道和重定向符号的简单外部命令
     //     SimpleCmdHandler(cmdLine);
     //   }
+    // }
+    // else{
+    //   //父进程
+    //   if(!isBackground){
+    //     int ret = waitpid(pid, nullptr, 0);
+    //     if(ret < 0){
+    //       std::cout << "wait failed\n";
+    //     }
+    //   }
+    // }
+
+    //debug
+      if(IsPipe(cmdLine)){
+        PipeCmdHandler(cmdLine);
+      }
+      else if(IsRedirect(cmdLine)){
+        RedirectCmdHandler(cmdLine);
+      }
+      else{
+        //不包含管道和重定向符号的简单外部命令
+        SimpleCmdHandler(cmdLine);
+      }
   }
 }
 
