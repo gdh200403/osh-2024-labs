@@ -1,0 +1,10 @@
+makefile
+out.txt
+shell
+shell.cpp
+shell.o
+makefile
+out.txt
+shell
+shell.cpp
+shell.o
