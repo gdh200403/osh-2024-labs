@@ -1,27 +1,6 @@
 // server.c
-#include <math.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <netinet/in.h>
-
-#define BIND_IP_ADDR "127.0.0.1"
-#define BIND_PORT 8000
-#define MAX_RECV_LEN 1048576
-#define MAX_SEND_LEN 1048576
-#define MAX_PATH_LEN 1024
-#define MAX_HOST_LEN 1024
-#define MAX_CONN 20
-
-#define HTTP_STATUS_200 "200 OK"
-#define ERR_INVALID_METHOD -2
-#define ERR_NOT_FOUND -3
-
+#include "server.h"
+#include "thread.h"
 
 int parse_request(int client_socket, ssize_t *req_len, char *req, struct stat *file_type)
 {
@@ -196,14 +175,16 @@ int main(){
     struct sockaddr_in clnt_addr;
     socklen_t clnt_addr_size = sizeof(clnt_addr);
 
+    ThreadPool *pool = ThreadPool_Create(MAX_THREAD, MAX_QUEUE_SIZE);
+
     while (1) // 一直循环
     {
 		// 当没有客户端连接时， accept() 会阻塞程序执行，直到有客户端连接进来
 		int clnt_socket = accept(serv_sock, (struct sockaddr *)&clnt_addr,
 								   &clnt_addr_size);
 		// 处理客户端的请求
-		handle_clnt(clnt_socket);
-		// if (clnt_socket != -1) { ThreadPool_Add(pool, clnt_socket); }
+		// handle_clnt(client_socket);
+		if (clnt_socket != -1) { ThreadPool_Add(pool, clnt_socket); }
     }
 
     // 实际上这里的代码不可到达，可以在 while 循环中收到 SIGINT 信号时主动 break

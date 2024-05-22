@@ -3,3 +3,7 @@
 **/*.txt
 
 /lab2/shell
+
+/lab3/hello.html
+/lab3/server
+/lab3/build/

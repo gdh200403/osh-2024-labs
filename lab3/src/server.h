@@ -17,7 +17,14 @@
 #define MAX_HOST_LEN 1024
 #define MAX_CONN 20
 
+#define MAX_CONN 20
+#define MAX_THREAD 200
+#define MAX_QUEUE_SIZE 1024
+
 #define HTTP_STATUS_200 "200 OK"
+
+#define ERR_INVALID_METHOD -2
+#define ERR_NOT_FOUND -3
 
 int parse_request(int client_socket, ssize_t *req_len, char *req, struct stat *file_type);
 
