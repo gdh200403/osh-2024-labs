@@ -43,6 +43,10 @@ int parse_request(int client_socket, ssize_t *req_len, char *req, struct stat *f
     char path[MAX_PATH_LEN];
     path[0] = '.'; // 在路径首位插入一个 '.'
     strncpy(path + 1, path_start, path_len); // 将路径复制到 path 中，从第二个字符开始
+    //去掉末尾的"/"
+    if (path[path_len] == '/' && path_len > 1) {
+        path_len--;
+    }
     path[path_len + 1] = '\0'; // 注意现在路径的长度增加了 1
 
     // 检查路径是否试图访问当前目录之外的文件
